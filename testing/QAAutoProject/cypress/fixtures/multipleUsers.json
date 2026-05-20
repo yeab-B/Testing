@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "username": "rahulshettyacademy",
+      "password": "Learning@830$3mK2",
+      "role": "admin",
+      "description": "Valid Admin user"
+    },
+    {
+      "username": "rahulshettyacademy",
+      "password": "Learning@830$3mK2",
+      "role": "user",
+      "description": "Valid User role"
+    }
+  ],
+  "invalidUsers": [
+    {
+      "username": "wronguser",
+      "password": "wrongpassword",
+      "role": "admin",
+      "description": "Invalid admin credentials"
+    },
+    {
+      "username": "rahulshettyacademy",
+      "password": "wrongpassword",
+      "role": "user",
+      "description": "Valid username wrong password"
+    }
+  ]
+}

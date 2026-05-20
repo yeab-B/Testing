@@ -1,0 +1,29 @@
+{
+  "valid": {
+    "username": "rahulshettyacademy",
+    "password": "Learning@830$3mK2"
+  },
+  "invalid": {
+    "username": "wronguser",
+    "password": "wrongpassword"
+  },
+  "validUser": {
+    "username": "practice",
+    "password": "SuperSecretPassword!"
+  },
+  "invalidUser": {
+    "username": "wrongUser",
+    "password": "SuperSecretPassword!"
+  },
+  "invalidPassword": {
+    "username": "practice",
+    "password": "WrongPassword123"
+  },
+  "messages": {
+    "loginSuccess": "You logged into a secure area!",
+    "invalidUsername": "Your password is invalid!",
+    "invalidPassword": "Your password is invalid!"
+  },
+  "wrongUsername": "wrongUser",
+  "wrongPassword": "WrongPassword123"
+}

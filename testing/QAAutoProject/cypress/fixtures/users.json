@@ -1,0 +1,12 @@
+[
+  {
+    "username": "rahulshettyacademy",
+    "password": "Learning@830$3mK2",
+    "role": "user"
+  },
+  {
+    "username": "teacher",
+    "password": "rahulshettyacademy",
+    "role": "Teacher"
+  }
+]

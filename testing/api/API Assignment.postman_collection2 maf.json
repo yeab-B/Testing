@@ -1,0 +1,502 @@
+{
+  "info": {
+    "_postman_id": "4fe3bff8-83a1-439d-b011-b204037da807",
+    "name": "API Assignment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54647312"
+  },
+  "item": [
+    {
+      "name": "GET Products List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Response time\r",
+              "pm.test(\"Response time is below 5000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(5000);\r",
+              "});\r",
+              "\r",
+              "// Content-Type\r",
+              "pm.test(\"Content-Type exists\", function () {\r",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.exist;\r",
+              "});\r",
+              "\r",
+              "const response = pm.response.json();\r",
+              "\r",
+              "// Products not empty\r",
+              "pm.test(\"Products list is not empty\", function () {\r",
+              "    pm.expect(response.products.length).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "// JSON Schema\r",
+              "const schema = {\r",
+              "    type: \"object\",\r",
+              "    required: [\"products\"],\r",
+              "    properties: {\r",
+              "        products: {\r",
+              "            type: \"array\",\r",
+              "            items: {\r",
+              "                type: \"object\",\r",
+              "                required: [\"id\", \"name\", \"price\", \"brand\", \"category\"],\r",
+              "                properties: {\r",
+              "                    id: { type: \"integer\" },\r",
+              "                    name: { type: \"string\" },\r",
+              "\r",
+              "                    // API returns price as string\r",
+              "                    price: { type: \"string\" },\r",
+              "\r",
+              "                    brand: { type: \"string\" },\r",
+              "\r",
+              "                    // category is object\r",
+              "                    category: {\r",
+              "                        type: \"object\",\r",
+              "                        required: [\"usertype\", \"category\"],\r",
+              "                        properties: {\r",
+              "                            usertype: {\r",
+              "                                type: \"object\",\r",
+              "                                properties: {\r",
+              "                                    usertype: { type: \"string\" }\r",
+              "                                }\r",
+              "                            },\r",
+              "                            category: { type: \"string\" }\r",
+              "                        }\r",
+              "                    }\r",
+              "                }\r",
+              "            }\r",
+              "        }\r",
+              "    }\r",
+              "};\r",
+              "\r",
+              "pm.test(\"Schema validation\", function () {\r",
+              "    pm.response.to.have.jsonSchema(schema);\r",
+              "});\r",
+              "\r",
+              "// No duplicate IDs\r",
+              "const ids = response.products.map(p => p.id);\r",
+              "const uniqueIds = [...new Set(ids)];\r",
+              "\r",
+              "pm.test(\"No duplicate IDs\", function () {\r",
+              "    pm.expect(ids.length).to.eql(uniqueIds.length);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://automationexercise.com/api/productsList",
+          "protocol": "https",
+          "host": [
+            "automationexercise",
+            "com"
+          ],
+          "path": [
+            "api",
+            "productsList"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create user",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "performance",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Get max response time from environment\r",
+              "const maxAllowedTime =\r",
+              "    pm.environment.get(\"maxResponseTime\") || 500;\r",
+              "\r",
+              "// Current response time\r",
+              "const currentTime = pm.response.responseTime;\r",
+              "\r",
+              "// Validate response time\r",
+              "pm.test(\"Response time is within threshold\", function () {\r",
+              "    pm.expect(currentTime).to.be.below(maxAllowedTime);\r",
+              "});\r",
+              "\r",
+              "// Warning if exceeded\r",
+              "if (currentTime > maxAllowedTime) {\r",
+              "    console.warn(\r",
+              "        \"WARNING: Response time exceeded threshold!\"\r",
+              "    );\r",
+              "}\r",
+              "\r",
+              "// Get stored response times\r",
+              "let responseTimes =\r",
+              "    pm.environment.get(\"responseTimes\");\r",
+              "\r",
+              "responseTimes = responseTimes\r",
+              "    ? JSON.parse(responseTimes)\r",
+              "    : [];\r",
+              "\r",
+              "// Add current response time\r",
+              "responseTimes.push(currentTime);\r",
+              "\r",
+              "// Save updated list\r",
+              "pm.environment.set(\r",
+              "    \"responseTimes\",\r",
+              "    JSON.stringify(responseTimes)\r",
+              ");\r",
+              "\r",
+              "// Calculate metrics\r",
+              "const minTime = Math.min(...responseTimes);\r",
+              "\r",
+              "const maxTime = Math.max(...responseTimes);\r",
+              "\r",
+              "const avgTime =\r",
+              "    responseTimes.reduce((a, b) => a + b, 0) /\r",
+              "    responseTimes.length;\r",
+              "\r",
+              "// Store metrics\r",
+              "pm.environment.set(\"minTime\", minTime);\r",
+              "\r",
+              "pm.environment.set(\"maxTime\", maxTime);\r",
+              "\r",
+              "pm.environment.set(\r",
+              "    \"avgTime\",\r",
+              "    avgTime.toFixed(2)\r",
+              ");\r",
+              "\r",
+              "// Log metrics\r",
+              "console.log(\"Current Time:\", currentTime);\r",
+              "\r",
+              "console.log(\"Minimum Time:\", minTime);\r",
+              "\r",
+              "console.log(\"Maximum Time:\", maxTime);\r",
+              "\r",
+              "console.log(\"Average Time:\", avgTime.toFixed(2));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "X-Do-Not-Track",
+            "value": "reqres-free-v1",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?delay=3",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "delay",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Autorization Test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Status code validation\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Parse response\r",
+              "const response = pm.response.json();\r",
+              "\r",
+              "// Validate user details\r",
+              "pm.test(\"User ID exists\", function () {\r",
+              "    pm.expect(response.data.id).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Email exists\", function () {\r",
+              "    pm.expect(response.data.email).to.exist;\r",
+              "});\r",
+              "\r",
+              "pm.test(\"First name exists\", function () {\r",
+              "    pm.expect(response.data.first_name).to.exist;\r",
+              "});\r",
+              "\r",
+              "// Validate Authorization header passed\r",
+              "pm.test(\"Authorization header passed\", function () {\r",
+              "\r",
+              "    const authHeader =\r",
+              "        pm.request.headers.get(\"Authorization\");\r",
+              "\r",
+              "    pm.expect(authHeader).to.include(\"Bearer\");\r",
+              "});\r",
+              "\r",
+              "// Response time check\r",
+              "pm.test(\"Response time under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "// Console logs\r",
+              "console.log(\"Authorization Header:\",\r",
+              "    pm.request.headers.get(\"Authorization\"));\r",
+              "\r",
+              "console.log(\"User Email:\",\r",
+              "    response.data.email);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "bearer{{token}}",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{apikey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "negative auth",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Random Token Generator",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Generate random token\r",
+              "const token =\r",
+              "    Math.random().toString(36).substring(2);\r",
+              "\r",
+              "// Save token\r",
+              "pm.environment.set(\"randomToken\", token);\r",
+              "\r",
+              "// Log token\r",
+              "console.log(\"Generated Token:\", token);\r",
+              "\r",
+              "// Add Authorization header\r",
+              "pm.request.headers.upsert({\r",
+              "    key: \"Authorization\",\r",
+              "    value: `Bearer ${token}`\r",
+              "});\r",
+              "\r",
+              "// Add ReqRes API key\r",
+              "pm.request.headers.upsert({\r",
+              "    key: \"x-api-key\",\r",
+              "    value: pm.environment.get(\"apiKey\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// Status code validation\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// Response time validation\r",
+              "pm.test(\"Response time less than 300ms\", function () {\r",
+              "\r",
+              "    pm.expect(\r",
+              "        pm.response.responseTime\r",
+              "    ).to.be.below(300);\r",
+              "});\r",
+              "\r",
+              "// Parse response\r",
+              "const response = pm.response.json();\r",
+              "\r",
+              "// Pagination fields validation\r",
+              "pm.test(\"Pagination fields exist\", function () {\r",
+              "\r",
+              "    pm.expect(response.page).to.exist;\r",
+              "\r",
+              "    pm.expect(response.per_page).to.exist;\r",
+              "\r",
+              "    pm.expect(response.total).to.exist;\r",
+              "});\r",
+              "\r",
+              "// Validate user count matches per_page\r",
+              "pm.test(\"Users count matches per_page\", function () {\r",
+              "\r",
+              "    pm.expect(response.data.length)\r",
+              "      .to.eql(response.per_page);\r",
+              "});\r",
+              "\r",
+              "// Validate Authorization header exists\r",
+              "pm.test(\"Authorization header exists\", function () {\r",
+              "\r",
+              "    const auth =\r",
+              "        pm.request.headers.get(\"Authorization\");\r",
+              "\r",
+              "    pm.expect(auth).to.include(\"Bearer\");\r",
+              "});\r",
+              "\r",
+              "// Log token\r",
+              "console.log(\r",
+              "    \"Authorization Header:\",\r",
+              "    pm.request.headers.get(\"Authorization\")\r",
+              ");\r",
+              "\r",
+              "console.log(\r",
+              "    \"Response Time:\",\r",
+              "    pm.response.responseTime\r",
+              ");"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apikey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?page=2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Data-driven POST Request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apikey}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"{{name}}\",\"job\":\"{{job}}\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ]
+}

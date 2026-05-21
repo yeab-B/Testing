@@ -1,0 +1,319 @@
+{
+  "info": {
+    "_postman_id": "233f95c0-a1df-4414-8063-c0f18c4782b3",
+    "name": "API Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54724768",
+    "_collection_link": "https://go.postman.co/collection/54724768-233f95c0-a1df-4414-8063-c0f18c4782b3?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Get Products",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1500ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1500);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Content-Type is application/json\", function () {\r",
+              "    pm.response.to.have.header(\"Content-Type\");\r",
+              "});\r",
+              "\r",
+              "let responseJson = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Products list is not empty\", function () {\r",
+              "    pm.expect(responseJson.products.length).to.be.above(0);\r",
+              "});\r",
+              "\r",
+              "// Check duplicate IDs\r",
+              "let ids = responseJson.products.map(p => p.id);\r",
+              "let uniqueIds = [...new Set(ids)];\r",
+              "\r",
+              "pm.test(\"No duplicate product IDs\", function () {\r",
+              "    pm.expect(ids.length).to.eql(uniqueIds.length);\r",
+              "});\r",
+              "\r",
+              "// Validate fields\r",
+              "pm.test(\"All products contain required fields\", function () {\r",
+              "    responseJson.products.forEach(product => {\r",
+              "        pm.expect(product).to.have.property(\"id\");\r",
+              "        pm.expect(product).to.have.property(\"name\");\r",
+              "        pm.expect(product).to.have.property(\"price\");\r",
+              "        pm.expect(product).to.have.property(\"brand\");\r",
+              "        pm.expect(product).to.have.property(\"category\");\r",
+              "\r",
+              "        pm.expect(product.id).to.be.a(\"number\");\r",
+              "    });\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://automationexercise.com/api/productsList",
+          "protocol": "https",
+          "host": [
+            "automationexercise",
+            "com"
+          ],
+          "path": [
+            "api",
+            "productsList"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time less than 300ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(300);\r",
+              "});\r",
+              "\r",
+              "let jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Response contains name\", function () {\r",
+              "    pm.expect(jsonData.name).to.eql(\"John Doe\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains email\", function () {\r",
+              "    pm.expect(jsonData.email).to.eql(\"john@example.com\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains generated id\", function () {\r",
+              "    pm.expect(jsonData).to.have.property(\"id\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response contains createdAt\", function () {\r",
+              "    pm.expect(jsonData).to.have.property(\"createdAt\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "free_user_3DmEl7ggvz8GKPFtjUUr1Gxa4bX"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"John Doe\",\r\n  \"email\": \"john@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "performance test",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let maxTime = pm.environment.get(\"maxResponseTime\") || 500;\r",
+              "\r",
+              "pm.test(\"Response time check\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(Number(maxTime));\r",
+              "});\r",
+              "\r",
+              "console.log(\"Response Time:\", pm.response.responseTime);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Authorization Test",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Pre-request Token Test",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Data Driven User Creation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "let jsonData = pm.response.json();\r",
+              "\r",
+              "pm.test(\"Correct name returned\", function () {\r",
+              "    pm.expect(jsonData.name).to.eql(pm.iterationData.get(\"name\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Correct job returned\", function () {\r",
+              "    pm.expect(jsonData.job).to.eql(pm.iterationData.get(\"job\"));\r",
+              "});\r",
+              "\r",
+              "pm.test(\"ID exists\", function () {\r",
+              "    pm.expect(jsonData).to.have.property(\"id\");\r",
+              "});\r",
+              "\r",
+              "console.log(\"Iteration:\", pm.info.iteration);\r",
+              "console.log(\"Created User:\", jsonData.name);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "pub_85544729e7369e6a6f9ae6723156325dfe4adce2a043a288b9a41000b4dcaa58",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"name\": \"{name}\",\r\n  \"job\": \"{job}\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create User Chain",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Unauthorized Test",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "New Request",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Pagination Test",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    },
+    {
+      "name": "Contract Test",
+      "request": {
+        "method": "GET",
+        "header": []
+      },
+      "response": []
+    }
+  ]
+}

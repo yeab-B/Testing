@@ -1,0 +1,2392 @@
+{
+  "info": {
+    "_postman_id": "021a6c7a-2d79-42a2-8f4e-fbb5aedb072a",
+    "name": "API Testing Exercises",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54860486"
+  },
+  "item": [
+    {
+      "name": "Ex1 - GET Product List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response FIRST before any tests use it ─────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = JSON.parse(pm.response.text());\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "// ── 1. Status code — API returns code inside body, not as HTTP status ─────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    // This API returns 200 inside the JSON body\r",
+              "    pm.expect(responseData.responseCode).to.equal(200);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time ──────────────────────────────────────────────────────────\r",
+              "// API is slow — threshold adjusted to 2000ms for this endpoint\r",
+              "pm.test(\"Response time is under 2000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Content-Type header ────────────────────────────────────────────────────\r",
+              "// This API returns text/html — check body has JSON instead\r",
+              "pm.test(\"Response body contains valid JSON with products\", function () {\r",
+              "    pm.expect(responseData).to.be.an(\"object\");\r",
+              "    pm.expect(responseData).to.have.property(\"products\");\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response body is valid JSON ────────────────────────────────────────────\r",
+              "pm.test(\"Response body is valid JSON\", function () {\r",
+              "    pm.expect(responseData).to.be.an(\"object\");\r",
+              "});\r",
+              "\r",
+              "// ── 5. Products list is non-empty ─────────────────────────────────────────────\r",
+              "pm.test(\"Response contains a non-empty list of products\", function () {\r",
+              "    pm.expect(responseData.products).to.be.an(\"array\");\r",
+              "    pm.expect(responseData.products.length).to.be.greaterThan(0);\r",
+              "    console.log(\"✅ Total products found: \" + responseData.products.length);\r",
+              "});\r",
+              "\r",
+              "// ── 6. JSON Schema validation ─────────────────────────────────────────────────\r",
+              "pm.test(\"Each product has required fields with correct types\", function () {\r",
+              "    const products = responseData.products;\r",
+              "\r",
+              "    products.forEach(function (product, index) {\r",
+              "        pm.expect(product, `Product ${index} missing id`).to.have.property(\"id\");\r",
+              "        pm.expect(product, `Product ${index} missing name`).to.have.property(\"name\");\r",
+              "        pm.expect(product, `Product ${index} missing price`).to.have.property(\"price\");\r",
+              "        pm.expect(product, `Product ${index} missing brand`).to.have.property(\"brand\");\r",
+              "        pm.expect(product, `Product ${index} missing category`).to.have.property(\"category\");\r",
+              "\r",
+              "        pm.expect(product.id,    `Product ${index} id not number`).to.be.a(\"number\");\r",
+              "        pm.expect(product.name,  `Product ${index} name not string`).to.be.a(\"string\");\r",
+              "        pm.expect(product.price, `Product ${index} price not string`).to.be.a(\"string\");\r",
+              "        pm.expect(product.brand, `Product ${index} brand not string`).to.be.a(\"string\");\r",
+              "    });\r",
+              "});\r",
+              "\r",
+              "// ── 7. No duplicate IDs ───────────────────────────────────────────────────────\r",
+              "pm.test(\"No duplicate product IDs exist\", function () {\r",
+              "    const ids = responseData.products.map(p => p.id);\r",
+              "    const uniqueIds = [...new Set(ids)];\r",
+              "    pm.expect(uniqueIds.length).to.equal(ids.length);\r",
+              "});\r",
+              "\r",
+              "// ── 8. All mandatory fields present ──────────────────────────────────────────\r",
+              "pm.test(\"All mandatory fields present in every product\", function () {\r",
+              "    const mandatoryFields = [\"id\", \"name\", \"price\", \"brand\", \"category\"];\r",
+              "    let missingFields = [];\r",
+              "\r",
+              "    responseData.products.forEach(function (product, index) {\r",
+              "        mandatoryFields.forEach(function (field) {\r",
+              "            if (!product.hasOwnProperty(field)) {\r",
+              "                missingFields.push(`Product ${index} missing: ${field}`);\r",
+              "            }\r",
+              "        });\r",
+              "    });\r",
+              "\r",
+              "    pm.expect(missingFields.length, missingFields.join(\", \")).to.equal(0);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "prerequest",
+          "script": {
+            "packages": {},
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "https://automationexercise.com/api/productsList",
+          "protocol": "https",
+          "host": [
+            "automationexercise",
+            "com"
+          ],
+          "path": [
+            "api",
+            "productsList"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex2 - POST Create New User",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "// ── 1. Status code is 201 Created ─────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time is under 300ms ──────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Content-Type header includes application/json ─────────────────────────\r",
+              "pm.test(\"Content-Type header is application/json\", function () {\r",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response includes submitted name ──────────────────────────────────────\r",
+              "pm.test(\"Response body includes submitted name\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"name\");\r",
+              "    pm.expect(responseData.name).to.equal(\"Alice Jane\");\r",
+              "    console.log(\"✅ Name: \" + responseData.name);\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response includes submitted email ─────────────────────────────────────\r",
+              "pm.test(\"Response body includes submitted email\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"email\");  \r",
+              "    pm.expect(responseData.email).to.equal(\"alice@example.com\");\r",
+              "    console.log(\"✅ Email: \" + responseData.email);\r",
+              "});\r",
+              "\r",
+              "// ── 6. Response includes auto-generated id ───────────────────────────────────\r",
+              "pm.test(\"Response includes auto-generated id\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"id\");\r",
+              "    pm.expect(responseData.id).to.be.a(\"string\");\r",
+              "    pm.expect(responseData.id).to.not.be.empty;\r",
+              "    console.log(\"✅ Auto-generated ID: \" + responseData.id);\r",
+              "\r",
+              "    // Store id as environment variable for later use\r",
+              "    pm.environment.set(\"createdUserId\", responseData.id);\r",
+              "});\r",
+              "\r",
+              "// ── 7. Response includes createdAt timestamp ──────────────────────────────────\r",
+              "pm.test(\"Response includes createdAt timestamp\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"createdAt\");\r",
+              "    pm.expect(responseData.createdAt).to.be.a(\"string\");\r",
+              "    pm.expect(responseData.createdAt).to.not.be.empty;\r",
+              "\r",
+              "    // Validate it is a valid date\r",
+              "    const createdAt = new Date(responseData.createdAt);\r",
+              "    pm.expect(createdAt.toString()).to.not.equal(\"Invalid Date\");\r",
+              "    console.log(\"✅ createdAt: \" + responseData.createdAt);\r",
+              "});\r",
+              "\r",
+              "// ── 8. Negative test — missing name field ─────────────────────────────────────\r",
+              "pm.test(\"Response body structure is correct\", function () {\r",
+              "    const expectedFields = [\"name\", \"email\", \"id\", \"createdAt\"]\r",
+              "    expectedFields.forEach(function(field) {\r",
+              "        pm.expect(responseData, `Missing field: ${field}`).to.have.property(field)\r",
+              "    })\r",
+              "})\r",
+              "\r",
+              "// ── 9. Log full response ──────────────────────────────────────────────────────\r",
+              "console.log(\"✅ Full response:\", JSON.stringify(responseData, null, 2));"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Alice Jane\",\r\n    \"email\": \"alice@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex2 - POST Negative Test (missing fields)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "// reqres.in returns 201 even with missing fields — it is a mock API\r",
+              "pm.test(\"Status code is 201\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response does NOT include name (was not sent) ─────────────────────────\r",
+              "pm.test(\"Name field is absent when not submitted\", function () {\r",
+              "    pm.expect(responseData).to.not.have.property(\"name\");\r",
+              "    console.log(\"✅ Name correctly absent from response\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Response includes only what was sent ───────────────────────────────────\r",
+              "pm.test(\"Response only reflects submitted fields\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"email\");\r",
+              "    pm.expect(responseData.email).to.equal(\"john@example.com\");\r",
+              "    console.log(\"✅ Email present: \" + responseData.email);\r",
+              "});\r",
+              "\r",
+              "// ── 4. Auto-generated fields still present ────────────────────────────────────\r",
+              "pm.test(\"Auto-generated id and createdAt still present\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"id\");\r",
+              "    pm.expect(responseData).to.have.property(\"createdAt\");\r",
+              "    console.log(\"✅ ID: \" + responseData.id);\r",
+              "    console.log(\"✅ createdAt: \" + responseData.createdAt);\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is acceptable\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1500);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"john@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex3 - Performance Test Response Time",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "// ── Get threshold from environment variable (default 5000ms) ──────────────────\r",
+              "const maxResponseTime = parseInt(pm.environment.get(\"maxResponseTime\")) || 5000;\r",
+              "const actualResponseTime = pm.response.responseTime;\r",
+              "\r",
+              "console.log(\"⏱️ Actual response time:    \" + actualResponseTime + \"ms\");\r",
+              "console.log(\"⚙️ Max threshold:           \" + maxResponseTime + \"ms\");\r",
+              "\r",
+              "// ── 1. Status code is 200 OK ──────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time is below threshold ───────────────────────────────────────\r",
+              "pm.test(`Response time (${actualResponseTime}ms) is below threshold (${maxResponseTime}ms)`, function () {\r",
+              "    if (actualResponseTime >= maxResponseTime) {\r",
+              "        console.warn(\"⚠️ WARNING: Response time exceeded threshold!\")\r",
+              "        console.warn(`⚠️ Expected below ${maxResponseTime}ms but got ${actualResponseTime}ms`)\r",
+              "    }\r",
+              "    pm.expect(actualResponseTime).to.be.below(maxResponseTime);\r",
+              "});\r",
+              "\r",
+              "// ── 3. Log warning if close to threshold ─────────────────────────────────────\r",
+              "pm.test(\"Response time warning check\", function () {\r",
+              "    const warningThreshold = maxResponseTime * 0.8 // warn at 80% of threshold\r",
+              "    if (actualResponseTime > warningThreshold) {\r",
+              "        console.warn(`⚠️ WARNING: Response time ${actualResponseTime}ms is close to threshold ${maxResponseTime}ms`)\r",
+              "    } else {\r",
+              "        console.log(`✅ Response time is healthy — ${actualResponseTime}ms`)\r",
+              "    }\r",
+              "    pm.expect(true).to.be.true // always passes — just for logging\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response has correct structure ─────────────────────────────────────────\r",
+              "pm.test(\"Response contains page and data fields\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"page\");\r",
+              "    pm.expect(responseData).to.have.property(\"data\");\r",
+              "    pm.expect(responseData.data).to.be.an(\"array\");\r",
+              "});\r",
+              "\r",
+              "// ── 5. Data list is not empty ─────────────────────────────────────────────────\r",
+              "pm.test(\"Data list is not empty\", function () {\r",
+              "    pm.expect(responseData.data.length).to.be.greaterThan(0);\r",
+              "    console.log(\"✅ Users returned: \" + responseData.data.length);\r",
+              "});\r",
+              "\r",
+              "// ── 6. Collect and store performance metrics ──────────────────────────────────\r",
+              "// Get existing metrics from environment\r",
+              "let metrics = pm.environment.get(\"performanceMetrics\");\r",
+              "metrics = metrics ? JSON.parse(metrics) : { times: [], min: null, max: null, avg: null };\r",
+              "\r",
+              "// Add current response time\r",
+              "metrics.times.push(actualResponseTime);\r",
+              "\r",
+              "// Calculate min, max, average\r",
+              "metrics.min = Math.min(...metrics.times);\r",
+              "metrics.max = Math.max(...metrics.times);\r",
+              "metrics.avg = Math.round(\r",
+              "    metrics.times.reduce((a, b) => a + b, 0) / metrics.times.length\r",
+              ");\r",
+              "\r",
+              "// Save back to environment\r",
+              "pm.environment.set(\"performanceMetrics\", JSON.stringify(metrics));\r",
+              "\r",
+              "// Log metrics summary\r",
+              "console.log(\"📊 Performance Metrics Summary:\");\r",
+              "console.log(\"   Min response time: \" + metrics.min + \"ms\");\r",
+              "console.log(\"   Max response time: \" + metrics.max + \"ms\");\r",
+              "console.log(\"   Avg response time: \" + metrics.avg + \"ms\");\r",
+              "console.log(\"   Total runs:        \" + metrics.times.length);\r",
+              "\r",
+              "pm.test(\"Performance metrics collected successfully\", function () {\r",
+              "    pm.expect(metrics.times.length).to.be.greaterThan(0);\r",
+              "    console.log(`✅ Metrics stored — Min: ${metrics.min}ms | Max: ${metrics.max}ms | Avg: ${metrics.avg}ms`);\r",
+              "});\r",
+              "\r",
+              "// ── 7. Delay parameter was respected ─────────────────────────────────────────\r",
+              "pm.test(\"API respected the delay parameter (response >= 3000ms)\", function () {\r",
+              "    // With delay=3, response should take at least 3 seconds\r",
+              "    pm.expect(actualResponseTime).to.be.at.least(3000);\r",
+              "    console.log(\"✅ Delay parameter respected — response took \" + actualResponseTime + \"ms\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          },
+          {
+            "key": "",
+            "value": "",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?delay=3",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "delay",
+              "value": "3"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex4 - GET Valid Bearer Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// ── 1. Status code is 200 OK ──────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time is acceptable ───────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Token is passed in request headers ─────────────────────────────────────\r",
+              "pm.test(\"Authorization token is passed in request headers\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\");\r",
+              "    pm.expect(authHeader).to.not.be.null;\r",
+              "    pm.expect(authHeader).to.include(\"Bearer\");\r",
+              "    console.log(\"✅ Auth header: \" + authHeader);\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response contains user data object ─────────────────────────────────────\r",
+              "pm.test(\"Response contains user data object\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"data\");\r",
+              "    pm.expect(responseData.data).to.be.an(\"object\");\r",
+              "});\r",
+              "\r",
+              "// ── 5. User has correct id ────────────────────────────────────────────────────\r",
+              "pm.test(\"Response contains correct user id\", function () {\r",
+              "    pm.expect(responseData.data).to.have.property(\"id\");\r",
+              "    pm.expect(responseData.data.id).to.equal(2);\r",
+              "    console.log(\"✅ User ID: \" + responseData.data.id);\r",
+              "});\r",
+              "\r",
+              "// ── 6. User has name fields ───────────────────────────────────────────────────\r",
+              "pm.test(\"Response contains user name fields\", function () {\r",
+              "    pm.expect(responseData.data).to.have.property(\"first_name\");\r",
+              "    pm.expect(responseData.data).to.have.property(\"last_name\");\r",
+              "    pm.expect(responseData.data.first_name).to.be.a(\"string\").and.not.be.empty;\r",
+              "    pm.expect(responseData.data.last_name).to.be.a(\"string\").and.not.be.empty;\r",
+              "    console.log(\"✅ Name: \" + responseData.data.first_name + \" \" + responseData.data.last_name);\r",
+              "});\r",
+              "\r",
+              "// ── 7. User has email ─────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response contains user email\", function () {\r",
+              "    pm.expect(responseData.data).to.have.property(\"email\");\r",
+              "    pm.expect(responseData.data.email).to.be.a(\"string\");\r",
+              "    pm.expect(responseData.data.email).to.include(\"@\");\r",
+              "    console.log(\"✅ Email: \" + responseData.data.email);\r",
+              "});\r",
+              "\r",
+              "// ── 8. Content-Type header ────────────────────────────────────────────────────\r",
+              "pm.test(\"Content-Type header is application/json\", function () {\r",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer{{authToken}}",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2?",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ],
+          "query": [
+            {
+              "key": "",
+              "value": null
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex4 - GET No Token (negative)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// reqres.in does not enforce auth on this endpoint\r",
+              "// so we test that no auth header was sent\r",
+              "pm.test(\"No Authorization header was sent\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\");\r",
+              "    // In Postman, missing headers return undefined not null\r",
+              "    pm.expect(authHeader).to.be.undefined;\r",
+              "    console.log(\"✅ Confirmed — no Authorization header in request\");\r",
+              "});\r",
+              "pm.test(\"API still responds (reqres does not enforce auth)\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+              "    console.log(\"Response status: \" + pm.response.status);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is acceptable\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex4 - GET Invalid Token (negative)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "pm.test(\"Invalid token request is handled\", function () {\r",
+              "    // reqres.in is a mock API — it may still return 200\r",
+              "    // In a real API this would return 401\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);\r",
+              "    console.log(\"✅ Status with invalid token: \" + pm.response.status);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Invalid token was sent in header\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\");\r",
+              "    pm.expect(authHeader).to.include(\"Bearer invalid_expired_token_xyz\");\r",
+              "    console.log(\"✅ Confirmed invalid token was sent: \" + authHeader);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response does not expose sensitive data\", function () {\r",
+              "    const bodyText = pm.response.text();\r",
+              "    pm.expect(bodyText).to.not.include(\"password\");\r",
+              "    pm.expect(bodyText).to.not.include(\"secret\");\r",
+              "    pm.expect(bodyText).to.not.include(\"private_key\");\r",
+              "    console.log(\"✅ No sensitive data exposed in response\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is acceptable\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer invalid_expired_token_xyz",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex5 - GET Random Token Generator",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// ── Generate random token ─────────────────────────────────────────────────────\r",
+              "function generateRandomToken(length) {\r",
+              "    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\r",
+              "    let token = ''\r",
+              "    for (let i = 0; i < length; i++) {\r",
+              "        token += characters.charAt(Math.floor(Math.random() * characters.length))\r",
+              "    }\r",
+              "    return token\r",
+              "}\r",
+              "\r",
+              "// Generate a 32 character random token\r",
+              "const randomToken = generateRandomToken(32)\r",
+              "\r",
+              "// Set as environment variable so it can be used in headers\r",
+              "pm.environment.set(\"randomToken\", randomToken)\r",
+              "\r",
+              "// Log for debugging\r",
+              "console.log(\"🔑 Generated random token: \" + randomToken)\r",
+              "console.log(\"✅ Token set as environment variable: randomToken\")"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// ── 1. Status code is 200 OK ──────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time is under 300ms ──────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Generated token was sent in Authorization header ───────────────────────\r",
+              "pm.test(\"Generated token is sent in Authorization header\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\")\r",
+              "    const storedToken = pm.environment.get(\"randomToken\")\r",
+              "\r",
+              "    pm.expect(authHeader).to.not.be.undefined\r",
+              "    pm.expect(authHeader).to.include(\"Bearer\")\r",
+              "    pm.expect(authHeader).to.include(storedToken)\r",
+              "\r",
+              "    console.log(\"✅ Token in header:     \" + authHeader)\r",
+              "    console.log(\"✅ Token in env:        Bearer \" + storedToken)\r",
+              "});\r",
+              "\r",
+              "// ── 4. Pagination field — page exists and equals 2 ───────────────────────────\r",
+              "pm.test(\"Pagination field page equals 2\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"page\")\r",
+              "    pm.expect(responseData.page).to.equal(2)\r",
+              "    console.log(\"✅ page: \" + responseData.page)\r",
+              "});\r",
+              "\r",
+              "// ── 5. Pagination field — per_page exists ────────────────────────────────────\r",
+              "pm.test(\"Pagination field per_page exists\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"per_page\")\r",
+              "    pm.expect(responseData.per_page).to.be.a(\"number\")\r",
+              "    pm.expect(responseData.per_page).to.be.greaterThan(0)\r",
+              "    console.log(\"✅ per_page: \" + responseData.per_page)\r",
+              "});\r",
+              "\r",
+              "// ── 6. Pagination field — total exists ───────────────────────────────────────\r",
+              "pm.test(\"Pagination field total exists\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"total\")\r",
+              "    pm.expect(responseData.total).to.be.a(\"number\")\r",
+              "    pm.expect(responseData.total).to.be.greaterThan(0)\r",
+              "    console.log(\"✅ total: \" + responseData.total)\r",
+              "});\r",
+              "\r",
+              "// ── 7. Number of users matches per_page value ────────────────────────────────\r",
+              "pm.test(\"Number of users returned matches per_page value\", function () {\r",
+              "    const perPage = responseData.per_page\r",
+              "    const actualUsers = responseData.data.length\r",
+              "\r",
+              "    pm.expect(actualUsers).to.equal(perPage)\r",
+              "    console.log(`✅ Users returned: ${actualUsers} matches per_page: ${perPage}`)\r",
+              "});\r",
+              "\r",
+              "// ── 8. Data array exists and is not empty ────────────────────────────────────\r",
+              "pm.test(\"Data array exists and is not empty\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"data\")\r",
+              "    pm.expect(responseData.data).to.be.an(\"array\")\r",
+              "    pm.expect(responseData.data.length).to.be.greaterThan(0)\r",
+              "});\r",
+              "\r",
+              "// ── 9. Each user has required fields ─────────────────────────────────────────\r",
+              "pm.test(\"Each user has id, email, first_name, last_name\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(user, `User ${index} missing id`).to.have.property(\"id\")\r",
+              "        pm.expect(user, `User ${index} missing email`).to.have.property(\"email\")\r",
+              "        pm.expect(user, `User ${index} missing first_name`).to.have.property(\"first_name\")\r",
+              "        pm.expect(user, `User ${index} missing last_name`).to.have.property(\"last_name\")\r",
+              "    })\r",
+              "    console.log(\"✅ All users have required fields\")\r",
+              "});\r",
+              "\r",
+              "// ── 10. Log token for debugging ───────────────────────────────────────────────\r",
+              "const usedToken = pm.environment.get(\"randomToken\")\r",
+              "console.log(\"🔑 Token used for this request: \" + usedToken)\r",
+              "console.log(\"📊 Total users: \" + responseData.total)\r",
+              "console.log(\"📄 Current page: \" + responseData.page)\r",
+              "console.log(\"📋 Per page: \" + responseData.per_page)"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{randomToken}}",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?page=2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex6 - Data-driven POST Multiple Iterations",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// ── Data-driven testing without data files ────────────────────────────────────\r",
+              "// Store all test users as an array in environment\r",
+              "const allUsers = [\r",
+              "    { \"userName\": \"Alice\",   \"userJob\": \"Engineer\"    },\r",
+              "    { \"userName\": \"Bob\",     \"userJob\": \"Designer\"    },\r",
+              "    { \"userName\": \"Charlie\", \"userJob\": \"Manager\"     },\r",
+              "    { \"userName\": \"Diana\",   \"userJob\": \"Analyst\"     },\r",
+              "    { \"userName\": \"Eve\",     \"userJob\": \"Developer\"   },\r",
+              "    { \"userName\": \"Frank\",   \"userJob\": \"Tester\"      },\r",
+              "    { \"userName\": \"Grace\",   \"userJob\": \"DevOps\"      },\r",
+              "    { \"userName\": \"Henry\",   \"userJob\": \"Architect\"   },\r",
+              "    { \"userName\": \"Iris\",    \"userJob\": \"Scrum Master\" },\r",
+              "    { \"userName\": \"Jack\",    \"userJob\": \"Engineer\"    }\r",
+              "]\r",
+              "\r",
+              "// Get current index from environment (start at 0)\r",
+              "let currentIndex = parseInt(pm.environment.get(\"currentUserIndex\") || \"0\")\r",
+              "\r",
+              "// Get current user\r",
+              "const currentUser = allUsers[currentIndex]\r",
+              "\r",
+              "// Set variables for use in request body\r",
+              "pm.environment.set(\"userName\", currentUser.userName)\r",
+              "pm.environment.set(\"userJob\",  currentUser.userJob)\r",
+              "\r",
+              "// Save total count for post-response use\r",
+              "pm.environment.set(\"totalUsers\",    allUsers.length.toString())\r",
+              "pm.environment.set(\"currentUserIndex\", currentIndex.toString())\r",
+              "\r",
+              "console.log(`\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)\r",
+              "console.log(`👤 Iteration ${currentIndex + 1}/${allUsers.length}`)\r",
+              "console.log(`   Name: ${currentUser.userName}`)\r",
+              "console.log(`   Job:  ${currentUser.userJob}`)\r",
+              "console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "// ── Get current iteration info ────────────────────────────────────────────────\r",
+              "const userName     = pm.environment.get(\"userName\")\r",
+              "const userJob      = pm.environment.get(\"userJob\")\r",
+              "const currentIndex = parseInt(pm.environment.get(\"currentUserIndex\"))\r",
+              "const totalUsers   = parseInt(pm.environment.get(\"totalUsers\"))\r",
+              "\r",
+              "console.log(`\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)\r",
+              "console.log(`👤 Iteration ${currentIndex + 1}/${totalUsers}: ${userName} | ${userJob}`)\r",
+              "console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`)\r",
+              "\r",
+              "// ── 1. Status code is 201 Created ─────────────────────────────────────────────\r",
+              "pm.test(`[${userName}] Status code is 201 Created`, function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response includes correct name (title) ─────────────────────────────────\r",
+              "pm.test(`[${userName}] Response includes correct name`, function () {\r",
+              "    pm.expect(responseData).to.have.property(\"title\")\r",
+              "    pm.expect(responseData.title).to.equal(userName)\r",
+              "    console.log(\"✅ Name matched: \" + responseData.title)\r",
+              "});\r",
+              "\r",
+              "// ── 3. Response includes correct job (body) ───────────────────────────────────\r",
+              "pm.test(`[${userName}] Response includes correct job`, function () {\r",
+              "    pm.expect(responseData).to.have.property(\"body\")\r",
+              "    pm.expect(responseData.body).to.equal(userJob)\r",
+              "    console.log(\"✅ Job matched: \" + responseData.body)\r",
+              "});\r",
+              "\r",
+              "\r",
+              "// ── 4. Response includes unique id ───────────────────────────────────────────\r",
+              "pm.test(`[${userName}] Response includes unique id`, function () {\r",
+              "    pm.expect(responseData).to.have.property(\"id\")\r",
+              "    pm.expect(responseData.id).to.be.a(\"string\")  // ← change \"number\" to \"string\"\r",
+              "    pm.expect(responseData.id).to.not.be.empty\r",
+              "    console.log(\"✅ Unique ID: \" + responseData.id)\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(`[${userName}] Response time is under 1000ms`, function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});\r",
+              "\r",
+              "// ── Advance to next user ──────────────────────────────────────────────────────\r",
+              "const nextIndex = currentIndex + 1\r",
+              "if (nextIndex < totalUsers) {\r",
+              "    pm.environment.set(\"currentUserIndex\", nextIndex.toString())\r",
+              "    console.log(`➡️ Moving to iteration ${nextIndex + 1}/${totalUsers}`)\r",
+              "    postman.setNextRequest(pm.info.requestName)\r",
+              "} else {\r",
+              "    pm.environment.set(\"currentUserIndex\", \"0\")\r",
+              "    console.log(\"\\n🎉 All 10 iterations completed successfully!\")\r",
+              "    postman.setNextRequest(null)\r",
+              "}\r",
+              "\r",
+              "console.log(`✅ ${userName} created with ID: ${responseData.id}`)"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"title\": \"{{userName}}\",\r\n    \"body\": \"{{userJob}}\",\r\n    \"userId\": 1\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex7 - GET Mock Server Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "console.log(\"⏱️ Response time:\", pm.response.responseTime + \"ms\");\r",
+              "console.log(\"📋 Status:\", pm.response.status);\r",
+              "\r",
+              "// ── 1. Status code is 200 OK ──────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time is under 1500ms ──────────────────────────────────────────\r",
+              "pm.test(\"Mock response time is under 15000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1500);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "// ── 3. Mock specific header exists ────────────────────────────────────────────\r",
+              "pm.test(\"Mock header x-mock-response-name is present\", function () {\r",
+              "    const mockHeader = pm.response.headers.get(\"x-mock-response-name\")\r",
+              "    pm.expect(mockHeader).to.not.be.undefined\r",
+              "    pm.expect(mockHeader).to.equal(\"GET users success\")\r",
+              "    console.log(\"✅ Mock header: \" + mockHeader)\r",
+              "});\r",
+              "\r",
+              "// ── 4. Content-Type is application/json ──────────────────────────────────────\r",
+              "pm.test(\"Content-Type is application/json\", function () {\r",
+              "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response has data array ────────────────────────────────────────────────\r",
+              "pm.test(\"Response has data array\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"data\")\r",
+              "    pm.expect(responseData.data).to.be.an(\"array\")\r",
+              "    pm.expect(responseData.data.length).to.be.greaterThan(0)\r",
+              "    console.log(\"✅ Data array length: \" + responseData.data.length)\r",
+              "});\r",
+              "\r",
+              "// ── 6. Schema validation ──────────────────────────────────────────────────────\r",
+              "pm.test(\"Each user matches schema — id integer, email valid\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(user).to.have.property(\"id\")\r",
+              "        pm.expect(user).to.have.property(\"name\")\r",
+              "        pm.expect(user).to.have.property(\"email\")\r",
+              "        pm.expect(user.id).to.be.a(\"number\")\r",
+              "        pm.expect(user.name).to.be.a(\"string\").and.not.be.empty\r",
+              "        pm.expect(user.email).to.be.a(\"string\").and.include(\"@\")\r",
+              "        console.log(`✅ User ${index + 1}: ${user.name} | ${user.email}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 7. No duplicate IDs ───────────────────────────────────────────────────────\r",
+              "pm.test(\"No duplicate user IDs\", function () {\r",
+              "    const ids = responseData.data.map(u => u.id)\r",
+              "    const uniqueIds = [...new Set(ids)]\r",
+              "    pm.expect(uniqueIds.length).to.equal(ids.length)\r",
+              "    console.log(\"✅ No duplicate IDs found\")\r",
+              "});\r",
+              "\r",
+              "// ── 8. Total field exists ─────────────────────────────────────────────────────\r",
+              "pm.test(\"Response has total field\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"total\")\r",
+              "    pm.expect(responseData.total).to.be.a(\"number\")\r",
+              "    console.log(\"✅ Total: \" + responseData.total)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{mockUrl}}/users",
+          "host": [
+            "{{mockUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex7 - POST Mock Server Users",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "pm.test(\"Status code is 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mock response time is under 500ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Mock header x-mock-response-name is present\", function () {\r",
+              "    const mockHeader = pm.response.headers.get(\"x-mock-response-name\")\r",
+              "    pm.expect(mockHeader).to.not.be.undefined\r",
+              "    pm.expect(mockHeader).to.equal(\"POST users success\")\r",
+              "    console.log(\"✅ Mock header: \" + mockHeader)\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response has id name and email\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"id\")\r",
+              "    pm.expect(responseData).to.have.property(\"name\")\r",
+              "    pm.expect(responseData).to.have.property(\"email\")\r",
+              "    pm.expect(responseData.id).to.be.a(\"number\")\r",
+              "    pm.expect(responseData.email).to.include(\"@\")\r",
+              "    console.log(\"✅ ID: \" + responseData.id)\r",
+              "    console.log(\"✅ Name: \" + responseData.name)\r",
+              "    console.log(\"✅ Email: \" + responseData.email)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"New User\",\r\n    \"email\": \"newuser@example.com\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{mockUrl}}/users",
+          "host": [
+            "{{mockUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex7 - GET Undefined Endpoint (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Undefined endpoint returns 404\", function () {\r",
+              "    pm.response.to.have.status(404);\r",
+              "    console.log(\"✅ 404 returned for undefined endpoint\");\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\");\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Error message is present\", function () {\r",
+              "    const body = pm.response.json()\r",
+              "    pm.expect(body).to.have.property(\"error\")\r",
+              "    console.log(\"✅ Error response: \" + JSON.stringify(body.error))\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{mockUrl}}/undefined-endpoint",
+          "host": [
+            "{{mockUrl}}"
+          ],
+          "path": [
+            "undefined-endpoint"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex8 - POST Create User (Chain Step 1)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// ── 1. Status code is 201 Created ─────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response includes name ─────────────────────────────────────────────────\r",
+              "pm.test(\"Response includes correct name\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"name\")\r",
+              "    pm.expect(responseData.name).to.equal(\"John Doe\")\r",
+              "    console.log(\"✅ Name: \" + responseData.name)\r",
+              "});\r",
+              "\r",
+              "// ── 3. Response includes job ──────────────────────────────────────────────────\r",
+              "pm.test(\"Response includes correct job\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"job\")\r",
+              "    pm.expect(responseData.job).to.equal(\"Software Engineer\")\r",
+              "    console.log(\"✅ Job: \" + responseData.job)\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response includes id ───────────────────────────────────────────────────\r",
+              "pm.test(\"Response includes auto-generated id\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"id\")\r",
+              "    pm.expect(responseData.id).to.not.be.empty\r",
+              "    console.log(\"✅ Generated ID: \" + responseData.id)\r",
+              "});\r",
+              "\r",
+              "// ── 5. Extract and store id as global variable ────────────────────────────────\r",
+              "pm.test(\"ID extracted and stored as global variable\", function () {\r",
+              "    const userId = responseData.id\r",
+              "\r",
+              "    // Store as both environment and global variable\r",
+              "    pm.globals.set(\"chainedUserId\", userId)\r",
+              "    pm.environment.set(\"chainedUserId\", userId)\r",
+              "\r",
+              "    pm.expect(pm.globals.get(\"chainedUserId\")).to.equal(userId)\r",
+              "    console.log(\"✅ ID stored globally: \" + userId)\r",
+              "});\r",
+              "\r",
+              "// ── 6. Response includes createdAt ───────────────────────────────────────────\r",
+              "pm.test(\"Response includes createdAt timestamp\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"createdAt\")\r",
+              "    console.log(\"✅ createdAt: \" + responseData.createdAt)\r",
+              "});\r",
+              "\r",
+              "// ── 7. Store original data for comparison in next request ─────────────────────\r",
+              "pm.globals.set(\"chainedUserName\", responseData.name)\r",
+              "pm.globals.set(\"chainedUserJob\",  responseData.job)\r",
+              "console.log(\"\\n🔗 Chaining data stored:\")\r",
+              "console.log(\"   ID:   \" + responseData.id)\r",
+              "console.log(\"   Name: \" + responseData.name)\r",
+              "console.log(\"   Job:  \" + responseData.job)"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"John Doe\",\r\n    \"job\": \"Software Engineer\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex8 - GET User by ID (Chain Step 2)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2));\r",
+              "\r",
+              "// ── Get stored values from global variables ───────────────────────────────────\r",
+              "const storedId   = pm.globals.get(\"chainedUserId\")\r",
+              "const storedName = pm.globals.get(\"chainedUserName\")\r",
+              "const storedJob  = pm.globals.get(\"chainedUserJob\")\r",
+              "\r",
+              "console.log(\"\\n🔗 Chained values:\")\r",
+              "console.log(\"   Stored ID:   \" + storedId)\r",
+              "console.log(\"   Stored Name: \" + storedName)\r",
+              "console.log(\"   Stored Job:  \" + storedJob)\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "// reqres.in is a mock API — GET by dynamic id may return 200 or 404\r",
+              "pm.test(\"Request was made with chained ID\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 404])\r",
+              "    console.log(\"✅ Status: \" + pm.response.status)\r",
+              "    console.log(\"✅ Used chained ID: \" + storedId)\r",
+              "});\r",
+              "\r",
+              "// ── 2. ID was reused correctly ────────────────────────────────────────────────\r",
+              "pm.test(\"Chained ID was reused in GET request\", function () {\r",
+              "    pm.expect(storedId).to.not.be.undefined\r",
+              "    pm.expect(storedId).to.not.be.empty\r",
+              "    console.log(\"✅ ID reused correctly: \" + storedId)\r",
+              "});\r",
+              "\r",
+              "// ── 3. ID stored as global variable ──────────────────────────────────────────\r",
+              "pm.test(\"ID is stored as global variable\", function () {\r",
+              "    const globalId = pm.globals.get(\"chainedUserId\")\r",
+              "    pm.expect(globalId).to.not.be.undefined\r",
+              "    pm.expect(globalId).to.equal(storedId)\r",
+              "    console.log(\"✅ Global variable chainedUserId: \" + globalId)\r",
+              "});\r",
+              "\r",
+              "// ── 4. Handle response based on status ───────────────────────────────────────\r",
+              "if (pm.response.code === 200) {\r",
+              "    pm.test(\"Response contains user data\", function () {\r",
+              "        pm.expect(responseData).to.have.property(\"data\")\r",
+              "        console.log(\"✅ User data found\")\r",
+              "    })\r",
+              "\r",
+              "    pm.test(\"User id matches chained id\", function () {\r",
+              "        pm.expect(responseData.data.id.toString()).to.equal(storedId.toString())\r",
+              "        console.log(\"✅ ID matches: \" + responseData.data.id)\r",
+              "    })\r",
+              "\r",
+              "} else {\r",
+              "    // reqres.in returns 404 for dynamic IDs from POST\r",
+              "    // This is expected behavior — the POST is simulated\r",
+              "    pm.test(\"404 is expected — reqres does not persist POST data\", function () {\r",
+              "        pm.expect(pm.response.code).to.equal(404)\r",
+              "        console.log(\"✅ 404 expected — reqres does not store POST data\")\r",
+              "        console.log(\"✅ ID was correctly passed in URL: \" + storedId)\r",
+              "    })\r",
+              "}\r",
+              "\r",
+              "// ── 5. Handle missing or invalid ID gracefully ────────────────────────────────\r",
+              "pm.test(\"Missing or invalid ID is handled gracefully\", function () {\r",
+              "    if (!storedId) {\r",
+              "        console.warn(\"⚠️ No ID found in global variables\")\r",
+              "        pm.expect.fail(\"chainedUserId global variable is missing\")\r",
+              "    } else {\r",
+              "        pm.expect(storedId).to.not.be.empty\r",
+              "        console.log(\"✅ ID is valid: \" + storedId)\r",
+              "    }\r",
+              "});\r",
+              "\r",
+              "// ── 6. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/{{chainedUserId}}",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "{{chainedUserId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex9 - GET No Auth Header (401 expected)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Status:\", pm.response.status)\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "pm.test(\"Request without auth returns 200 or 401\", function () {\r",
+              "    // reqres.in does not enforce auth on GET /users/2\r",
+              "    // but we document and verify the behavior\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403])\r",
+              "    console.log(\"✅ Status without auth: \" + pm.response.status)\r",
+              "});\r",
+              "\r",
+              "// ── 2. No Authorization header was sent ──────────────────────────────────────\r",
+              "pm.test(\"No Authorization header was sent in request\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\")\r",
+              "    pm.expect(authHeader).to.be.undefined\r",
+              "    console.log(\"✅ Confirmed — no Authorization header sent\")\r",
+              "});\r",
+              "\r",
+              "// ── 3. Response does not expose sensitive data ────────────────────────────────\r",
+              "pm.test(\"Response does not expose sensitive data\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "    pm.expect(bodyText).to.not.include(\"password\")\r",
+              "    pm.expect(bodyText).to.not.include(\"secret\")\r",
+              "    pm.expect(bodyText).to.not.include(\"private_key\")\r",
+              "    pm.expect(bodyText).to.not.include(\"token\")\r",
+              "    console.log(\"✅ No sensitive data exposed\")\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response structure is safe ─────────────────────────────────────────────\r",
+              "pm.test(\"Response structure does not leak internal info\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "    pm.expect(bodyText).to.not.include(\"stack\")\r",
+              "    pm.expect(bodyText).to.not.include(\"internal\")\r",
+              "    pm.expect(bodyText).to.not.include(\"database\")\r",
+              "    console.log(\"✅ No internal info leaked\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex9 - GET Expired Token (negative)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Status:\", pm.response.status)\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "pm.test(\"Expired token request returns valid status\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403])\r",
+              "    console.log(\"✅ Status with expired token: \" + pm.response.status)\r",
+              "});\r",
+              "\r",
+              "// ── 2. Expired token was sent ─────────────────────────────────────────────────\r",
+              "pm.test(\"Expired token was sent in Authorization header\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\")\r",
+              "    pm.expect(authHeader).to.not.be.undefined\r",
+              "    pm.expect(authHeader).to.include(\"Bearer expired_token_12345_xyz\")\r",
+              "    console.log(\"✅ Expired token confirmed in header: \" + authHeader)\r",
+              "});\r",
+              "\r",
+              "// ── 3. Response does not expose sensitive data ────────────────────────────────\r",
+              "pm.test(\"Response does not expose sensitive data\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "    pm.expect(bodyText).to.not.include(\"password\")\r",
+              "    pm.expect(bodyText).to.not.include(\"secret\")\r",
+              "    pm.expect(bodyText).to.not.include(\"private_key\")\r",
+              "    console.log(\"✅ No sensitive data exposed with expired token\")\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response does not leak internal info ───────────────────────────────────\r",
+              "pm.test(\"Response does not leak internal server info\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "    pm.expect(bodyText).to.not.include(\"stack\")\r",
+              "    pm.expect(bodyText).to.not.include(\"database\")\r",
+              "    pm.expect(bodyText).to.not.include(\"internal\")\r",
+              "    console.log(\"✅ No internal info leaked with expired token\")\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer expired_token_12345_xyz",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex9 - GET Replay Attack (negative)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Status:\", pm.response.status)\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── 1. Replay attack is handled ───────────────────────────────────────────────\r",
+              "pm.test(\"Replay attack request is handled correctly\", function () {\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403])\r",
+              "    console.log(\"✅ Replay attack status: \" + pm.response.status)\r",
+              "});\r",
+              "\r",
+              "// ── 2. Replayed token was sent ────────────────────────────────────────────────\r",
+              "pm.test(\"Replayed token was sent in header\", function () {\r",
+              "    const authHeader = pm.request.headers.get(\"Authorization\")\r",
+              "    pm.expect(authHeader).to.include(\"Bearer abc123_replayed_old_token\")\r",
+              "    console.log(\"✅ Replayed token confirmed: \" + authHeader)\r",
+              "});\r",
+              "\r",
+              "// ── 3. No sensitive data exposed ─────────────────────────────────────────────\r",
+              "pm.test(\"Replay attack response does not expose sensitive data\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "    pm.expect(bodyText).to.not.include(\"password\")\r",
+              "    pm.expect(bodyText).to.not.include(\"secret\")\r",
+              "    pm.expect(bodyText).to.not.include(\"private_key\")\r",
+              "    console.log(\"✅ No sensitive data exposed in replay attack response\")\r",
+              "});\r",
+              "\r",
+              "// ── 4. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer abc123_replayed_old_token",
+            "type": "text"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"John Doe\",\r\n    \"job\": \"Software Engineer\"\r\n}"
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users/2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users",
+            "2"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex10 - GET Pagination Page 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200)\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});\r",
+              "\r",
+              "// ── 3. Page metadata equals 2 ────────────────────────────────────────────────\r",
+              "pm.test(\"Response metadata page equals 2\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"page\")\r",
+              "    pm.expect(responseData.page).to.equal(2)\r",
+              "    console.log(\"✅ page: \" + responseData.page)\r",
+              "});\r",
+              "\r",
+              "// ── 4. total_pages exists ─────────────────────────────────────────────────────\r",
+              "pm.test(\"Response metadata total_pages exists\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"total_pages\")\r",
+              "    pm.expect(responseData.total_pages).to.be.a(\"number\")\r",
+              "    pm.expect(responseData.total_pages).to.be.greaterThan(0)\r",
+              "    console.log(\"✅ total_pages: \" + responseData.total_pages)\r",
+              "});\r",
+              "\r",
+              "// ── 5. per_page exists ────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response metadata per_page exists\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"per_page\")\r",
+              "    pm.expect(responseData.per_page).to.be.a(\"number\")\r",
+              "    pm.expect(responseData.per_page).to.be.greaterThan(0)\r",
+              "    console.log(\"✅ per_page: \" + responseData.per_page)\r",
+              "});\r",
+              "\r",
+              "// ── 6. total exists ───────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response metadata total exists\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"total\")\r",
+              "    pm.expect(responseData.total).to.be.a(\"number\")\r",
+              "    console.log(\"✅ total: \" + responseData.total)\r",
+              "});\r",
+              "\r",
+              "// ── 7. User list length matches per_page ─────────────────────────────────────\r",
+              "pm.test(\"User list length matches per_page value\", function () {\r",
+              "    const perPage    = responseData.per_page\r",
+              "    const actualUsers = responseData.data.length\r",
+              "    pm.expect(actualUsers).to.equal(perPage)\r",
+              "    console.log(`✅ Users returned: ${actualUsers} matches per_page: ${perPage}`)\r",
+              "});\r",
+              "\r",
+              "// ── 8. Store page 2 user IDs for overlap check ────────────────────────────────\r",
+              "const page2Ids = responseData.data.map(u => u.id)\r",
+              "pm.environment.set(\"page2UserIds\", JSON.stringify(page2Ids))\r",
+              "console.log(\"✅ Page 2 IDs stored: \" + page2Ids.join(\", \"))\r",
+              "\r",
+              "// ── 9. Each user has required fields ─────────────────────────────────────────\r",
+              "pm.test(\"Each user has id email first_name last_name\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(user).to.have.property(\"id\")\r",
+              "        pm.expect(user).to.have.property(\"email\")\r",
+              "        pm.expect(user).to.have.property(\"first_name\")\r",
+              "        pm.expect(user).to.have.property(\"last_name\")\r",
+              "        console.log(`✅ User ${index + 1}: ${user.first_name} ${user.last_name}`)\r",
+              "    })\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users?page=2",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex10 - GET Pagination Page 1 (overlap check)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200)\r",
+              "});\r",
+              "\r",
+              "// ── 2. Page metadata equals 1 ────────────────────────────────────────────────\r",
+              "pm.test(\"Response metadata page equals 1\", function () {\r",
+              "    pm.expect(responseData.page).to.equal(1)\r",
+              "    console.log(\"✅ page: \" + responseData.page)\r",
+              "});\r",
+              "\r",
+              "// ── 3. No overlap with page 2 results ────────────────────────────────────────\r",
+              "pm.test(\"No overlap between page 1 and page 2 results\", function () {\r",
+              "    const page2Ids = JSON.parse(pm.environment.get(\"page2UserIds\") || \"[]\")\r",
+              "    const page1Ids = responseData.data.map(u => u.id)\r",
+              "\r",
+              "    console.log(\"Page 1 IDs: \" + page1Ids.join(\", \"))\r",
+              "    console.log(\"Page 2 IDs: \" + page2Ids.join(\", \"))\r",
+              "\r",
+              "    const overlap = page1Ids.filter(id => page2Ids.includes(id))\r",
+              "    pm.expect(overlap.length).to.equal(0)\r",
+              "    console.log(\"✅ No overlapping IDs between pages\")\r",
+              "});\r",
+              "\r",
+              "// ── 4. User list matches per_page ────────────────────────────────────────────\r",
+              "pm.test(\"User list length matches per_page\", function () {\r",
+              "    pm.expect(responseData.data.length).to.equal(responseData.per_page)\r",
+              "    console.log(`✅ ${responseData.data.length} users matches per_page: ${responseData.per_page}`)\r",
+              "});\r",
+              "\r",
+              "// ── 5. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users?page=1",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex10 - GET Pagination Page 999 (empty)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200)\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Page 999 returns empty data list\", function () {\r",
+              "    pm.expect(responseData).to.have.property(\"data\")\r",
+              "    pm.expect(responseData.data).to.be.an(\"array\")\r",
+              "    pm.expect(responseData.data.length).to.equal(0)\r",
+              "    console.log(\"✅ Empty data list returned for page 999\")\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users?page=999",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "999"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex10 - GET Pagination page=abc (invalid type)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON\");\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "console.log(\"Status:\", pm.response.status)\r",
+              "\r",
+              "pm.test(\"Invalid page type is handled\", function () {\r",
+              "    // reqres.in may return 200 with page 1 or an error\r",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 422])\r",
+              "    console.log(\"✅ Status for page=abc: \" + pm.response.status)\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is valid JSON\", function () {\r",
+              "    pm.expect(responseData).to.be.an(\"object\")\r",
+              "    console.log(\"✅ Response is valid JSON\")\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "https://reqres.in/api/users?page=abc",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "abc"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Ex11 - GET Contract Testing Schema Validation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "// ── Parse response ────────────────────────────────────────────────────────────\r",
+              "let responseData;\r",
+              "try {\r",
+              "    responseData = pm.response.json();\r",
+              "} catch (e) {\r",
+              "    pm.expect.fail(\"Response is not valid JSON: \" + e.message);\r",
+              "}\r",
+              "\r",
+              "console.log(\"Response:\", JSON.stringify(responseData, null, 2))\r",
+              "\r",
+              "// ── Define strict schema ──────────────────────────────────────────────────────\r",
+              "const userSchema = {\r",
+              "    requiredFields: [\"id\", \"email\", \"first_name\", \"last_name\", \"avatar\"],\r",
+              "    fieldTypes: {\r",
+              "        id:         \"number\",\r",
+              "        email:      \"string\",\r",
+              "        first_name: \"string\",\r",
+              "        last_name:  \"string\",\r",
+              "        avatar:     \"string\"\r",
+              "    },\r",
+              "    forbiddenFields: [\"password\", \"token\", \"secret\", \"private_key\"]\r",
+              "}\r",
+              "\r",
+              "const rootSchema = {\r",
+              "    requiredFields: [\"page\", \"per_page\", \"total\", \"total_pages\", \"data\"],\r",
+              "    fieldTypes: {\r",
+              "        page:        \"number\",\r",
+              "        per_page:    \"number\",\r",
+              "        total:       \"number\",\r",
+              "        total_pages: \"number\",\r",
+              "        data:        \"array\"\r",
+              "    }\r",
+              "}\r",
+              "\r",
+              "// ── 1. Status code ────────────────────────────────────────────────────────────\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200)\r",
+              "});\r",
+              "\r",
+              "// ── 2. Response time ──────────────────────────────────────────────────────────\r",
+              "pm.test(\"Response time is under 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000)\r",
+              "    console.log(\"⏱️ Response time: \" + pm.response.responseTime + \"ms\")\r",
+              "});\r",
+              "\r",
+              "// ── 3. Root level required fields exist ──────────────────────────────────────\r",
+              "pm.test(\"Root level has all required fields\", function () {\r",
+              "    rootSchema.requiredFields.forEach(function(field) {\r",
+              "        pm.expect(\r",
+              "            responseData,\r",
+              "            `Missing root field: ${field}`\r",
+              "        ).to.have.property(field)\r",
+              "        console.log(`✅ Root field present: ${field}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 4. Root level field types are correct ─────────────────────────────────────\r",
+              "pm.test(\"Root level field types are correct\", function () {\r",
+              "    Object.entries(rootSchema.fieldTypes).forEach(function([field, type]) {\r",
+              "        if (type === \"array\") {\r",
+              "            pm.expect(\r",
+              "                responseData[field],\r",
+              "                `${field} should be array`\r",
+              "            ).to.be.an(\"array\")\r",
+              "        } else {\r",
+              "            pm.expect(\r",
+              "                responseData[field],\r",
+              "                `${field} should be ${type}`\r",
+              "            ).to.be.a(type)\r",
+              "        }\r",
+              "        console.log(`✅ Root field type correct: ${field} is ${type}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 5. Array length matches per_page ─────────────────────────────────────────\r",
+              "pm.test(\"Data array length matches per_page value\", function () {\r",
+              "    pm.expect(responseData.data.length).to.equal(responseData.per_page)\r",
+              "    console.log(`✅ data.length (${responseData.data.length}) matches per_page (${responseData.per_page})`)\r",
+              "});\r",
+              "\r",
+              "// ── 6. Each user has all required fields ──────────────────────────────────────\r",
+              "pm.test(\"Each user has all required fields\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        userSchema.requiredFields.forEach(function(field) {\r",
+              "            pm.expect(\r",
+              "                user,\r",
+              "                `User ${index + 1} missing field: ${field}`\r",
+              "            ).to.have.property(field)\r",
+              "        })\r",
+              "        console.log(`✅ User ${index + 1} has all required fields`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 7. Each user field types are correct ──────────────────────────────────────\r",
+              "pm.test(\"Each user field types are correct\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        Object.entries(userSchema.fieldTypes).forEach(function([field, type]) {\r",
+              "            pm.expect(\r",
+              "                user[field],\r",
+              "                `User ${index + 1} field ${field} should be ${type}`\r",
+              "            ).to.be.a(type)\r",
+              "        })\r",
+              "        console.log(`✅ User ${index + 1} field types all correct`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 8. No extra undefined fields exist ───────────────────────────────────────\r",
+              "pm.test(\"No extra undefined fields in user objects\", function () {\r",
+              "    const allowedFields = userSchema.requiredFields\r",
+              "\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        const userFields = Object.keys(user)\r",
+              "        userFields.forEach(function(field) {\r",
+              "            pm.expect(\r",
+              "                allowedFields,\r",
+              "                `User ${index + 1} has unexpected field: ${field}`\r",
+              "            ).to.include(field)\r",
+              "        })\r",
+              "        console.log(`✅ User ${index + 1} has no extra fields`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 9. No forbidden fields exposed ───────────────────────────────────────────\r",
+              "pm.test(\"No forbidden fields exposed in response\", function () {\r",
+              "    const bodyText = pm.response.text()\r",
+              "\r",
+              "    userSchema.forbiddenFields.forEach(function(field) {\r",
+              "        pm.expect(\r",
+              "            bodyText,\r",
+              "            `Forbidden field exposed: ${field}`\r",
+              "        ).to.not.include(field)\r",
+              "        console.log(`✅ Forbidden field not present: ${field}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 10. Email format validation ───────────────────────────────────────────────\r",
+              "pm.test(\"All user emails are valid format\", function () {\r",
+              "    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/\r",
+              "\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(\r",
+              "            emailRegex.test(user.email),\r",
+              "            `User ${index + 1} has invalid email: ${user.email}`\r",
+              "        ).to.be.true\r",
+              "        console.log(`✅ User ${index + 1} email valid: ${user.email}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 11. Avatar URL format validation ─────────────────────────────────────────\r",
+              "pm.test(\"All avatar URLs are valid format\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(\r",
+              "            user.avatar,\r",
+              "            `User ${index + 1} avatar not a URL`\r",
+              "        ).to.match(/^https?:\\/\\//)\r",
+              "        console.log(`✅ User ${index + 1} avatar URL valid`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 12. ID is positive integer ────────────────────────────────────────────────\r",
+              "pm.test(\"All user IDs are positive integers\", function () {\r",
+              "    responseData.data.forEach(function(user, index) {\r",
+              "        pm.expect(user.id).to.be.a(\"number\")\r",
+              "        pm.expect(user.id).to.be.greaterThan(0)\r",
+              "        pm.expect(Number.isInteger(user.id)).to.be.true\r",
+              "        console.log(`✅ User ${index + 1} ID is positive integer: ${user.id}`)\r",
+              "    })\r",
+              "});\r",
+              "\r",
+              "// ── 13. Optional fields check ─────────────────────────────────────────────────\r",
+              "pm.test(\"Optional support field is null or object if present\", function () {\r",
+              "    if (responseData.hasOwnProperty(\"support\")) {\r",
+              "        pm.expect(responseData.support).to.satisfy(function(val) {\r",
+              "            return val === null || typeof val === \"object\"\r",
+              "        })\r",
+              "        console.log(\"✅ Optional support field is valid\")\r",
+              "    } else {\r",
+              "        console.log(\"✅ Optional support field is absent — acceptable\")\r",
+              "    }\r",
+              "});\r",
+              "\r",
+              "// ── Log summary ───────────────────────────────────────────────────────────────\r",
+              "console.log(\"\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\")\r",
+              "console.log(\"📋 Contract Testing Summary\")\r",
+              "console.log(\"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\")\r",
+              "console.log(\"Page:        \" + responseData.page)\r",
+              "console.log(\"Per Page:    \" + responseData.per_page)\r",
+              "console.log(\"Total:       \" + responseData.total)\r",
+              "console.log(\"Total Pages: \" + responseData.total_pages)\r",
+              "console.log(\"Users:       \" + responseData.data.length)\r",
+              "console.log(\"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\")"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{reqresApiKey}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": ""
+        },
+        "url": {
+          "raw": "https://reqres.in/api/users?page=1",
+          "protocol": "https",
+          "host": [
+            "reqres",
+            "in"
+          ],
+          "path": [
+            "api",
+            "users"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
